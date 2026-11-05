@@ -5934,8 +5934,8 @@ MonoBehaviour:
   ambientMixerGroup: {fileID: 24300012, guid: 5ae3745ebbbb9ba44a824ab2a3c1741d, type: 2}
   windAmbienceClip: {fileID: 8300000, guid: 7c100000000000000000000000000020, type: 3}
   tunnelAmbienceClip: {fileID: 8300000, guid: 1c5bbdae9b1b60c42afeeefbda59dd64, type: 3}
-  windBaseVolume: 0.32
-  tunnelBaseVolume: 0.28
+  windBaseVolume: 0.8
+  tunnelBaseVolume: 0.38
   atmosphericStingerClips:
   - {fileID: 8300000, guid: 07c45ae68b52bc64b8c08bf3cc19f5cc, type: 3}
   - {fileID: 8300000, guid: fcf4185eea5790341b9ab1f8192708e0, type: 3}

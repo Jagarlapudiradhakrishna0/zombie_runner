@@ -28,20 +28,22 @@ namespace ZombieRunner.UI
         [SerializeField] private AudioMixerGroup sfxMixerGroup;
 
         [Header("Volume Levels")]
-        [SerializeField, Range(0f, 1f)] private float musicVolume      = 0.52f;
-        [SerializeField, Range(0f, 1f)] private float ambienceVolume   = 0.38f;
-        [SerializeField, Range(0f, 1f)] private float uiVolume         = 0.45f;
+        [SerializeField, Range(0f, 1f)] private float musicVolume      = 0.75f;
+        [SerializeField, Range(0f, 1f)] private float ambienceVolume   = 0.55f;
+        [SerializeField, Range(0f, 1f)] private float uiVolume         = 0.85f;
 
         [Header("Fade-In")]
-        [SerializeField, Min(0f)]       private float musicFadeInSeconds    = 3.5f;
-        [SerializeField, Min(0f)]       private float ambienceFadeInSeconds = 2.0f;
+        [SerializeField, Min(0f)]       private float musicFadeInSeconds    = 0.4f;
+        [SerializeField, Min(0f)]       private float ambienceFadeInSeconds = 0.4f;
 
         private AudioSource musicSource;
         private AudioSource ambienceSource;
         private AudioSource uiSource;
+        private bool isAudioStarted = false;
 
         private void Awake()
         {
+            EnsureAudioClipsAssigned();
             CreateSources();
         }
 
@@ -50,43 +52,109 @@ namespace ZombieRunner.UI
             StartMenuAudio();
         }
 
+        private void OnEnable()
+        {
+            if (isAudioStarted)
+            {
+                if (musicSource != null && !musicSource.isPlaying && menuMusicClip != null)
+                {
+                    musicSource.Play();
+                }
+                if (ambienceSource != null && !ambienceSource.isPlaying && cityAmbienceClip != null)
+                {
+                    ambienceSource.Play();
+                }
+            }
+        }
+
+        public void Configure(AudioClip musicClip, AudioClip ambClip, AudioClip clickClip)
+        {
+            if (musicClip != null) menuMusicClip = musicClip;
+            if (ambClip != null) cityAmbienceClip = ambClip;
+            if (clickClip != null) buttonClickClip = clickClip;
+
+            if (musicSource != null && menuMusicClip != null)
+            {
+                musicSource.clip = menuMusicClip;
+                if (!musicSource.isPlaying) musicSource.Play();
+            }
+            if (ambienceSource != null && cityAmbienceClip != null)
+            {
+                ambienceSource.clip = cityAmbienceClip;
+                if (!ambienceSource.isPlaying) ambienceSource.Play();
+            }
+        }
+
+        private void EnsureAudioClipsAssigned()
+        {
+#if UNITY_EDITOR
+            if (menuMusicClip == null)
+            {
+                menuMusicClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/ZombieRunner/Audio/ProvidedAudio/music/main screen intro music.mp3");
+                if (menuMusicClip == null)
+                    menuMusicClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/ZombieRunner/Audio/Clips/Music_Horror_Layer1_Exploration.wav");
+            }
+
+            if (cityAmbienceClip == null)
+            {
+                cityAmbienceClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/ZombieRunner/Audio/ProvidedAudio/music/city sound.mp3");
+                if (cityAmbienceClip == null)
+                    cityAmbienceClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/ZombieRunner/Audio/Clips/Ambience_City_Night_Wind.wav");
+            }
+
+            if (buttonClickClip == null)
+            {
+                buttonClickClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/ZombieRunner/Audio/Clips/SFX_UI_Button_Horror.wav");
+            }
+#endif
+        }
+
         private void CreateSources()
         {
-            // Music source
-            GameObject musicObj = new GameObject("MenuAudio_Music");
-            musicObj.transform.SetParent(transform, false);
-            musicSource = musicObj.AddComponent<AudioSource>();
-            musicSource.spatialBlend  = 0f;
-            musicSource.loop          = true;
-            musicSource.playOnAwake   = false;
-            musicSource.priority      = 32;
-            musicSource.volume        = 0f;
-            if (musicMixerGroup != null) musicSource.outputAudioMixerGroup = musicMixerGroup;
+            if (musicSource == null)
+            {
+                GameObject musicObj = new GameObject("MenuAudio_Music");
+                musicObj.transform.SetParent(transform, false);
+                musicSource = musicObj.AddComponent<AudioSource>();
+                musicSource.spatialBlend  = 0f;
+                musicSource.loop          = true;
+                musicSource.playOnAwake   = false;
+                musicSource.priority      = 32;
+                musicSource.volume        = 0f;
+                if (musicMixerGroup != null) musicSource.outputAudioMixerGroup = musicMixerGroup;
+            }
 
-            // Ambience source
-            GameObject ambObj = new GameObject("MenuAudio_Ambience");
-            ambObj.transform.SetParent(transform, false);
-            ambienceSource = ambObj.AddComponent<AudioSource>();
-            ambienceSource.spatialBlend = 0f;
-            ambienceSource.loop         = true;
-            ambienceSource.playOnAwake  = false;
-            ambienceSource.priority     = 48;
-            ambienceSource.volume       = 0f;
-            if (ambientMixerGroup != null) ambienceSource.outputAudioMixerGroup = ambientMixerGroup;
+            if (ambienceSource == null)
+            {
+                GameObject ambObj = new GameObject("MenuAudio_Ambience");
+                ambObj.transform.SetParent(transform, false);
+                ambienceSource = ambObj.AddComponent<AudioSource>();
+                ambienceSource.spatialBlend = 0f;
+                ambienceSource.loop         = true;
+                ambienceSource.playOnAwake  = false;
+                ambienceSource.priority     = 48;
+                ambienceSource.volume       = 0f;
+                if (ambientMixerGroup != null) ambienceSource.outputAudioMixerGroup = ambientMixerGroup;
+            }
 
-            // Tactile UI click source
-            GameObject uiObj = new GameObject("MenuAudio_UI");
-            uiObj.transform.SetParent(transform, false);
-            uiSource = uiObj.AddComponent<AudioSource>();
-            uiSource.spatialBlend = 0f;
-            uiSource.loop         = false;
-            uiSource.playOnAwake  = false;
-            uiSource.priority     = 64;
-            if (sfxMixerGroup != null) uiSource.outputAudioMixerGroup = sfxMixerGroup;
+            if (uiSource == null)
+            {
+                GameObject uiObj = new GameObject("MenuAudio_UI");
+                uiObj.transform.SetParent(transform, false);
+                uiSource = uiObj.AddComponent<AudioSource>();
+                uiSource.spatialBlend = 0f;
+                uiSource.loop         = false;
+                uiSource.playOnAwake  = false;
+                uiSource.priority     = 64;
+                if (sfxMixerGroup != null) uiSource.outputAudioMixerGroup = sfxMixerGroup;
+            }
         }
 
         private void StartMenuAudio()
         {
+            EnsureAudioClipsAssigned();
+            CreateSources();
+
             // Apply saved volume levels from SaveManager if available
             float savedMusic  = musicVolume;
             float savedAmbient = ambienceVolume;
@@ -97,21 +165,40 @@ namespace ZombieRunner.UI
                 savedAmbient = Mathf.Clamp01(ambienceVolume * ZombieRunner.Core.SaveManager.Instance.AmbienceVolume);
             }
 
-            // Start music
-            if (menuMusicClip != null)
+            // Start music immediately
+            if (menuMusicClip != null && musicSource != null)
             {
                 musicSource.clip = menuMusicClip;
+                musicSource.loop = true;
                 musicSource.Play();
-                StartCoroutine(FadeIn(musicSource, savedMusic, musicFadeInSeconds));
+                if (musicFadeInSeconds > 0.05f)
+                {
+                    StartCoroutine(FadeIn(musicSource, savedMusic, musicFadeInSeconds));
+                }
+                else
+                {
+                    musicSource.volume = savedMusic;
+                }
+                Debug.Log($"[MenuAudioController] Playing Main Menu Music: {menuMusicClip.name} (vol: {savedMusic:F2})");
             }
 
             // Start ambience
-            if (cityAmbienceClip != null)
+            if (cityAmbienceClip != null && ambienceSource != null)
             {
                 ambienceSource.clip = cityAmbienceClip;
+                ambienceSource.loop = true;
                 ambienceSource.Play();
-                StartCoroutine(FadeIn(ambienceSource, savedAmbient, ambienceFadeInSeconds));
+                if (ambienceFadeInSeconds > 0.05f)
+                {
+                    StartCoroutine(FadeIn(ambienceSource, savedAmbient, ambienceFadeInSeconds));
+                }
+                else
+                {
+                    ambienceSource.volume = savedAmbient;
+                }
             }
+
+            isAudioStarted = true;
         }
 
         private IEnumerator FadeIn(AudioSource src, float targetVolume, float duration)

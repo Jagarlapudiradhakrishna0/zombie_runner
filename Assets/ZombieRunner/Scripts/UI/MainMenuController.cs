@@ -317,6 +317,43 @@ namespace ZombieRunner.UI
                 GameObject lightningObj = new GameObject("Menu_AtmosphericLightning");
                 lightningObj.AddComponent<ZombieRunner.World.AtmosphericLightningFlash>();
             }
+
+            EnsureMenuAudioController();
+        }
+
+        private void EnsureMenuAudioController()
+        {
+            MenuAudioController mac = FindAnyObjectByType<MenuAudioController>();
+            if (mac == null)
+            {
+                GameObject audioObj = GameObject.Find("Menu_Atmosphere_Audio");
+                if (audioObj == null)
+                {
+                    audioObj = new GameObject("Menu_Atmosphere_Audio");
+                }
+                mac = audioObj.GetComponent<MenuAudioController>();
+                if (mac == null)
+                {
+                    mac = audioObj.AddComponent<MenuAudioController>();
+                }
+            }
+
+#if UNITY_EDITOR
+            if (mac != null)
+            {
+                AudioClip musicClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/ZombieRunner/Audio/ProvidedAudio/music/main screen intro music.mp3");
+                if (musicClip == null)
+                    musicClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/ZombieRunner/Audio/Clips/Music_Horror_Layer1_Exploration.wav");
+
+                AudioClip ambClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/ZombieRunner/Audio/ProvidedAudio/music/city sound.mp3");
+                if (ambClip == null)
+                    ambClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/ZombieRunner/Audio/Clips/Ambience_Night_City_Wind_Loop.wav");
+
+                AudioClip clickClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/ZombieRunner/Audio/Clips/SFX_UI_Button_Horror.wav");
+
+                mac.Configure(musicClip, ambClip, clickClip);
+            }
+#endif
         }
 
         private void InitializeButtons()

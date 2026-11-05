@@ -56,8 +56,11 @@ namespace ZombieRunner.Editor
         private const string NormalZombiePrefabPath = "Assets/ZombieRunner/Prefabs/Zombies/NormalZombie.prefab";
         private const string BigZombiePrefabPath = "Assets/ZombieRunner/Prefabs/Zombies/BigZombie.prefab";
 
-        private const string WindAudioPath = "Assets/ZombieRunner/Audio/Clips/Ambience_Night_City_Wind_Loop.wav";
-        private const string MusicAudioPath = "Assets/ZombieRunner/Audio/Clips/Music_Horror_Layer1_Exploration.wav";
+        private const string IntroMusicAudioPath = "Assets/ZombieRunner/Audio/ProvidedAudio/music/main screen intro music.mp3";
+        private const string FallbackMusicAudioPath = "Assets/ZombieRunner/Audio/Clips/Music_Horror_Layer1_Exploration.wav";
+        private const string CityAmbienceAudioPath = "Assets/ZombieRunner/Audio/ProvidedAudio/music/city sound.mp3";
+        private const string FallbackWindAudioPath = "Assets/ZombieRunner/Audio/Clips/Ambience_Night_City_Wind_Loop.wav";
+        private const string ButtonClickAudioPath = "Assets/ZombieRunner/Audio/Clips/SFX_UI_Button_Horror.wav";
 
         [MenuItem("Zombie Runner/UI/Build Cinematic Main Menu Scene")]
         public static void BuildMainMenuScene()
@@ -342,29 +345,30 @@ namespace ZombieRunner.Editor
         {
             GameObject audioObj = new GameObject("Menu_Atmosphere_Audio");
 
-            AudioClip windClip = AssetDatabase.LoadAssetAtPath<AudioClip>(WindAudioPath);
-            if (windClip != null)
-            {
-                AudioSource windSrc = audioObj.AddComponent<AudioSource>();
-                windSrc.clip = windClip;
-                windSrc.loop = true;
-                windSrc.playOnAwake = true;
-                windSrc.volume = 0.65f;
-                windSrc.spatialBlend = 0f;
-                windSrc.Play();
-            }
+            MenuAudioController menuAudio = audioObj.AddComponent<MenuAudioController>();
 
-            AudioClip musicClip = AssetDatabase.LoadAssetAtPath<AudioClip>(MusicAudioPath);
-            if (musicClip != null)
-            {
-                AudioSource musicSrc = audioObj.AddComponent<AudioSource>();
-                musicSrc.clip = musicClip;
-                musicSrc.loop = true;
-                musicSrc.playOnAwake = true;
-                musicSrc.volume = 0.58f;
-                musicSrc.spatialBlend = 0f;
-                musicSrc.Play();
-            }
+            AudioClip musicClip = AssetDatabase.LoadAssetAtPath<AudioClip>(IntroMusicAudioPath);
+            if (musicClip == null)
+                musicClip = AssetDatabase.LoadAssetAtPath<AudioClip>(FallbackMusicAudioPath);
+
+            AudioClip ambClip = AssetDatabase.LoadAssetAtPath<AudioClip>(CityAmbienceAudioPath);
+            if (ambClip == null)
+                ambClip = AssetDatabase.LoadAssetAtPath<AudioClip>(FallbackWindAudioPath);
+
+            AudioClip clickClip = AssetDatabase.LoadAssetAtPath<AudioClip>(ButtonClickAudioPath);
+
+            SerializedObject macSO = new SerializedObject(menuAudio);
+            macSO.FindProperty("menuMusicClip").objectReferenceValue = musicClip;
+            macSO.FindProperty("cityAmbienceClip").objectReferenceValue = ambClip;
+            macSO.FindProperty("buttonClickClip").objectReferenceValue = clickClip;
+            macSO.FindProperty("musicVolume").floatValue = 0.75f;
+            macSO.FindProperty("ambienceVolume").floatValue = 0.55f;
+            macSO.FindProperty("uiVolume").floatValue = 0.85f;
+            macSO.FindProperty("musicFadeInSeconds").floatValue = 0.4f;
+            macSO.FindProperty("ambienceFadeInSeconds").floatValue = 0.4f;
+            macSO.ApplyModifiedProperties();
+
+            Debug.Log($"[MainMenuSceneBuilder] Wired MenuAudioController with Intro Music: {musicClip?.name}, Ambience: {ambClip?.name}");
         }
 
         private static void SetupUserInterface(TMP_FontAsset font, Sprite roundedSprite, Camera cam)

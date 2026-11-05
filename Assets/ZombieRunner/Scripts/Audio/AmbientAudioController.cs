@@ -17,11 +17,11 @@ namespace ZombieRunner.Audio
 
         [Header("Continuous Bed - City")]
         [SerializeField] private AudioClip windAmbienceClip;
-        [SerializeField, Range(0f, 1f)] private float windBaseVolume = 0.32f;
+        [SerializeField, Range(0f, 1f)] private float windBaseVolume = 0.80f;
 
         [Header("Continuous Bed - Tunnel")]
         [SerializeField] private AudioClip tunnelAmbienceClip;
-        [SerializeField, Range(0f, 1f)] private float tunnelBaseVolume = 0.28f;
+        [SerializeField, Range(0f, 1f)] private float tunnelBaseVolume = 0.38f;
 
         [Header("Sparse Environmental Events")]
         [SerializeField] private AudioClip[] atmosphericStingerClips;
@@ -40,12 +40,25 @@ namespace ZombieRunner.Audio
 
         private void Awake()
         {
+            EnsureClipsAssigned();
             EnsureSources();
         }
 
         private void Start()
         {
             StartAmbience();
+        }
+
+        private void EnsureClipsAssigned()
+        {
+#if UNITY_EDITOR
+            if (windAmbienceClip == null)
+            {
+                windAmbienceClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/ZombieRunner/Audio/ProvidedAudio/music/city sound.mp3");
+                if (windAmbienceClip == null)
+                    windAmbienceClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/ZombieRunner/Audio/Clips/Ambience_City_Night_Wind.wav");
+            }
+#endif
         }
 
         private void Update()
@@ -57,9 +70,14 @@ namespace ZombieRunner.Audio
         {
             if (windSource == null) return;
 
+            // Maintain continuous city ambient loop without sample-reset glitching
             if (windAmbienceClip != null && !windSource.isPlaying)
             {
-                windSource.clip = windAmbienceClip;
+                if (windSource.clip != windAmbienceClip)
+                {
+                    windSource.clip = windAmbienceClip;
+                }
+                windSource.loop = true;
                 windSource.Play();
             }
 
@@ -75,9 +93,13 @@ namespace ZombieRunner.Audio
 
             if (tunnelSource != null)
             {
-                if (tunnelAmbienceClip != null && !tunnelSource.isPlaying)
+                if (tunnelAmbienceClip != null && !tunnelSource.isPlaying && blend > 0.02f)
                 {
-                    tunnelSource.clip = tunnelAmbienceClip;
+                    if (tunnelSource.clip != tunnelAmbienceClip)
+                    {
+                        tunnelSource.clip = tunnelAmbienceClip;
+                    }
+                    tunnelSource.loop = true;
                     tunnelSource.Play();
                 }
 
@@ -164,22 +186,26 @@ namespace ZombieRunner.Audio
 
         private void StartAmbience()
         {
+            EnsureClipsAssigned();
             EnsureSources();
 
-            if (windAmbienceClip != null)
+            if (windAmbienceClip != null && windSource != null)
             {
                 windSource.clip = windAmbienceClip;
+                windSource.loop = true;
                 windSource.volume = windBaseVolume * masterAmbientVolume;
                 if (!windSource.isPlaying)
+                {
                     windSource.Play();
+                }
+                Debug.Log($"[AmbientAudioController] Started City Environment Sound: {windAmbienceClip.name} (volume: {windSource.volume:F2})");
             }
 
             if (tunnelAmbienceClip != null && tunnelSource != null)
             {
                 tunnelSource.clip = tunnelAmbienceClip;
+                tunnelSource.loop = true;
                 tunnelSource.volume = 0f;
-                if (!tunnelSource.isPlaying)
-                    tunnelSource.Play();
             }
 
             if (stingerRoutine != null)
@@ -222,9 +248,16 @@ namespace ZombieRunner.Audio
 
         private void OnEnable()
         {
-            if (isInitialized && stingerRoutine == null)
+            if (isInitialized)
             {
-                stingerRoutine = StartCoroutine(SparseStingerLoop());
+                if (windSource != null && windAmbienceClip != null && !windSource.isPlaying)
+                {
+                    windSource.Play();
+                }
+                if (stingerRoutine == null)
+                {
+                    stingerRoutine = StartCoroutine(SparseStingerLoop());
+                }
             }
         }
     }
