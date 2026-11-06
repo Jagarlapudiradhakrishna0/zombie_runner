@@ -121,8 +121,14 @@ zombie_runner/
 
 ## Development Team
 J. Radha Krishna — Lead Developer
+
+
 P. Makesh Babu — Gameplay Developer
+
+
 M. Omprakash — Environment Designer
+
+
 V. Siddharatha — UI & Testing
 
 ---
