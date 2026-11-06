@@ -120,11 +120,10 @@ zombie_runner/
 ---
 
 ## Development Team
-
-- **Collaborator 1:** `[Name / Role / GitHub Profile]`
-- **Collaborator 2:** `[Name / Role / GitHub Profile]`
-- **Collaborator 3:** `[Name / Role / GitHub Profile]`
-- **Collaborator 4:** `[Name / Role / GitHub Profile]`
+J. Radha Krishna — Lead Developer
+P. Makesh Babu — Gameplay Developer
+M. Omprakash — Environment Designer
+V. Siddharatha — UI & Testing
 
 ---
 
